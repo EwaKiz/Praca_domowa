@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 
 app = FastAPI()
-count = 0
+count = -1
 patients = {}
 
 class Patient(BaseModel):
