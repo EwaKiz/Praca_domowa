@@ -45,5 +45,5 @@ async def get_patient(pk:int):
     if pk in patients.keys():
         return patients[pk]
     else:
-        return JSONResponse(status_code=404, content={"message": "Patient not found"})
+        return JSONResponse(status_code=204, content={"message": "Patient not found"})
 
