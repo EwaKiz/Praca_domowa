@@ -24,7 +24,10 @@ class Patient(BaseModel):
 @app.get("/")
 def root():
     return {"message":  "Hello World during the coronavirus pandemic!"}
-
+   
+@app.get("/welcome")
+async def welcome():
+    return {"message":"Welcome!"}
 
 @app.api_route("/method", methods=["GET", "POST", "DELETE", "PUT"])
 async def method(request: Request):
