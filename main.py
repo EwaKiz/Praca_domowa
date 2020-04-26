@@ -18,7 +18,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.encoders import jsonable_encoder
 
 app = FastAPI()
-count = 0
+count = 1
 patients = {}
 security = HTTPBasic()
 app.secret_key = "very constatn and random secret, best 64 characters"
