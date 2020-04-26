@@ -15,7 +15,7 @@ import secrets
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-
+from fastapi.encoders import jsonable_encoder
 
 app = FastAPI()
 count = -1
@@ -70,21 +70,45 @@ def logout(session_token: str = Cookie(None)):
     app.tokens_list = [i for i in app.tokens_list if i != session_token]
     return RedirectResponse(url = "/")
 
+
 @app.post("/patient/")
 async def set_patient(patient:Patient, session_token: str = Cookie(None)):
     check_token(session_token)
     global count, patients
     count += 1
     patients[count] = patient
-    return {"id" : count ,"patient": patient}
+    return RedirectResponse(url = "/patient/{patient_id}".format(patient_id=count))
 
-    
+
+@app.get("/patient/")
+async def get_all_patients(session_token: str = Cookie(None)):
+    check_token(session_token)
+    return JSONResponse(jsonable_encoder(patients))
+
+
+@app.post("/patient/{pk}")
+async def return_patient(pk:int, patient:Patient, session_token: str = Cookie(None)):
+    """return after post"""
+    check_token(session_token)
+    global count, patients
+    return JSONResponse(jsonable_encoder(patients[pk]))
+
+
 @app.get("/patient/{pk}")
 async def get_patient(pk:int, session_token: str = Cookie(None)):
     check_token(session_token)
     global patients
     if pk in patients.keys():
-        return patients[pk]
+        return JSONResponse(jsonable_encoder(patients[pk]))
     else:
-        return JSONResponse(status_code=204, content={"message": "Patient not found"})
+        return JSONResponse(status_code=404, content={"message": "Patient not found"})
 
+@app.delete("/patient/{pk}")
+async def delete_patient(pk:int, session_token: str = Cookie(None)):
+    check_token(session_token)
+    global count, patients
+    if pk in patients.keys():
+        del patients[pk]
+        return JSONResponse(status_code=200, content={"message": "Patient {id} deleted!".format(id=pk)})
+    else:
+        return JSONResponse(status_code=404, content={"message": "Patient not found"})
