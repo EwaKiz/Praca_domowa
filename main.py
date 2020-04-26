@@ -32,6 +32,9 @@ def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
     print (app.tokens_list)
     return session_token
 
+def check_token(token: str):
+    if token not in app.tokens_list:
+        raise HTTPException(status_code=401, detail="Unathorized")
 
 class Patient(BaseModel):
     name: str
@@ -48,16 +51,23 @@ def login(response: Response, session_token = Depends(get_current_username)):
 
    
 @app.api_route("/welcome", methods=["GET", "POST"])
-async def welcome():
+async def welcome( session_token: str = Cookie(None)):
+    check_token(session_token)
     return {"message":"Welcome!"}
 
 @app.api_route("/method", methods=["GET", "POST", "DELETE", "PUT"])
 async def method(request: Request):
     return {"method": request.method}
 
+@app.post("/logout")
+def logout(session_token: str = Cookie(None)):
+    check_token(session_token)
+    app.tokens_list = [i for i in app.tokens_list if i != session_token]
+    return RedirectResponse(url = "/")
 
 @app.post("/patient/")
-async def set_patient(patient:Patient):
+async def set_patient(patient:Patient, session_token: str = Cookie(None)):
+    check_token(session_token)
     global count, patients
     count += 1
     patients[count] = patient
@@ -65,7 +75,8 @@ async def set_patient(patient:Patient):
 
     
 @app.get("/patient/{pk}")
-async def get_patient(pk:int):
+async def get_patient(pk:int, session_token: str = Cookie(None)):
+    check_token(session_token)
     global patients
     if pk in patients.keys():
         return patients[pk]
