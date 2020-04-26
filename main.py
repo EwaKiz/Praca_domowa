@@ -26,12 +26,11 @@ def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
     correct_username = secrets.compare_digest(credentials.username, "trudnY")
     correct_password = secrets.compare_digest(credentials.password, "PaC13Nt")
     if not (correct_username and correct_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect login or password",
-            headers={"WWW-Authenticate": "Basic"}
-        )
-    return credentials.username, credentials.password
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    session_token = sha256(bytes(f"{credentials.username}{credentials.password}{app.secret_key}", encoding='utf8')).hexdigest()
+    app.tokens_list.append(session_token)
+    print (app.tokens_list)
+    return session_token
 
 
 class Patient(BaseModel):
@@ -42,11 +41,7 @@ def root():
     return {"message":  "Hello World during the coronavirus pandemic!"}
 
 @app.post("/login")
-def login(credentials_user = Depends(get_current_username)):
-    user = credentials_user[0]
-    password =  credentials_user[1]
-    session_token = sha256(bytes(f"{user}{password}{app.secret_key}", encoding='utf8')).hexdigest()
-    app.tokens_list.append(session_token)
+def login(response: Response, session_token = Depends(get_current_username)):
     response = RedirectResponse(url = "/welcome")
     response.set_cookie(key="session_token", value=session_token)
     return response
