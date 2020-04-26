@@ -14,6 +14,8 @@ from fastapi.responses import JSONResponse
 import secrets
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.responses import RedirectResponse
+from fastapi.templating import Jinja2Templates
+
 
 app = FastAPI()
 count = -1
@@ -21,7 +23,10 @@ patients = {}
 security = HTTPBasic()
 app.secret_key = "very constatn and random secret, best 64 characters"
 app.tokens_list = []
+templates = Jinja2Templates(directory="templates")
 
+
+    
 def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
     correct_username = secrets.compare_digest(credentials.username, "trudnY")
     correct_password = secrets.compare_digest(credentials.password, "PaC13Nt")
@@ -51,9 +56,9 @@ def login(response: Response, session_token = Depends(get_current_username)):
 
    
 @app.api_route("/welcome", methods=["GET", "POST"])
-async def welcome( session_token: str = Cookie(None)):
+async def welcome(request: Request, session_token: str = Cookie(None)):
     check_token(session_token)
-    return {"message":"Welcome!"}
+    return templates.TemplateResponse("welcome.html", {"request": request, "user": "trudnY"})
 
 @app.api_route("/method", methods=["GET", "POST", "DELETE", "PUT"])
 async def method(request: Request):
