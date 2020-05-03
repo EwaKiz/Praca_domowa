@@ -189,7 +189,7 @@ async def albums_get(album_id:int):
             "SELECT *FROM albums WHERE AlbumId = ?",
             (album_id, )).fetchone()
     json_compatible_item_data = jsonable_encoder(album)
-    return JSONResponse(status_code=201, content=json_compatible_item_data)
+    return JSONResponse(status_code=200, content=json_compatible_item_data)
     
 
 
