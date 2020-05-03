@@ -152,7 +152,8 @@ async def composers(composer_name:str):
     if tracks:
         return tracks
     else:
-        return JSONResponse(status_code=404, content={"message": "composer not found"})
+        resp= {'error': composer_name}
+        return JSONResponse(status_code=404, content={'detail': resp})
 
 
 
