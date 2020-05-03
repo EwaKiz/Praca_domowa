@@ -50,6 +50,15 @@ class Album(BaseModel):
     title: str
     artist_id: int
     
+class Customer(BaseModel):
+    company: str =None
+    address: str =None
+    city: str = None
+    state: str= None
+    country: str = None
+    postalcode: str= None
+    fax: str =None
+    
 @app.get("/")
 def root():
     return {"message":  "Hello World during the coronavirus pandemic!"}
@@ -190,8 +199,46 @@ async def albums_get(album_id:int):
             (album_id, )).fetchone()
     json_compatible_item_data = jsonable_encoder(album)
     return JSONResponse(status_code=200, content=json_compatible_item_data)
-    
 
+@app.put("/customers/{customer_id}")
+async def update_customer(customer_id: int,customer: Customer):
+    cust_id = app.db_connection.execute(
+        "SELECT CustomerId FROM Customers WHERE CustomerId = ?", (customer_id,)
+    ).fetchall()
+    if cust_id:
+        dictionary =  customer.dict()
+        columns = []
+        vals = []
+        for column in dictionary.keys():
+            if dictionary[column] != None:
+                columns.append(column)
+                vals.append(dictionary[column])
+        columns = [f"{x} = ? " for x in columns]
+        query = "UPDATE customers SET "
+        for i in range(len(columns)):
+            query += columns[i]
+            if i != len(columns)-1:
+                query += ","
+        query += "WHERE customerid = ?"
+        print(query)
+        vals.append(customer_id)
+        vals = tuple(vals)
+        cursor = app.db_connection.execute(
+            query, vals
+        )
+        app.db_connection.commit()
+        app.db_connection.row_factory = sqlite3.Row
+        customer = app.db_connection.execute(
+            """SELECT * 
+             FROM customers WHERE customerid = ?""",
+            (customer_id, )).fetchone()
+    
+        return customer
+    else:
+        return JSONResponse(status_code=404, content={'detail': {'error': "Customer not in database"}})
+
+            
+            
 
 
 
