@@ -248,6 +248,15 @@ async def stats(category: str):
             FROM invoices NATURAL JOIN customers group by customerid ORDER BY Sum DESC, customerid""").fetchall()
     
         return customers
+    elif category == "genres":
+        app.db_connection.row_factory = sqlite3.Row
+        genres = app.db_connection.execute(
+            """SELECT genres.Name , Sum(Quantity) AS Sum
+            FROM (invoice_items NATURAL JOIN tracks) x INNER JOIN genres ON x.GenreId = genres.GenreId 
+            GROUP BY genres.GenreId 
+            ORDER BY sum DESC, genres.Name """).fetchall()
+    
+        return genres
     else:
         return JSONResponse(status_code=404, content={'detail': {'error': "Unknown category"}})
         
