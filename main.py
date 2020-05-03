@@ -239,7 +239,19 @@ async def update_customer(customer_id: int,customer: Customer):
 
             
             
-
+@app.get("/sales")
+async def stats(category: str):
+    if category == "customers":
+        app.db_connection.row_factory = sqlite3.Row
+        customers = app.db_connection.execute(
+            """SELECT customerid,email, phone, ROUND(SUM(total),2) AS Sum 
+            FROM invoices NATURAL JOIN customers group by customerid ORDER BY Sum DESC, customerid""").fetchall()
+    
+        return customers
+    else:
+        return JSONResponse(status_code=404, content={'detail': {'error': "Unknown category"}})
+        
+    
 
 
 
