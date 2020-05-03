@@ -147,7 +147,8 @@ async def all_tracks(page:int=0, per_page:int=10):
 
 @app.get("/tracks/composers")
 async def composers(composer_name:str):
-    tracks = app.db_connection.execute("select Name from tracks where Composer LIKE ? order by Name ASC ", ('%'+composer_name+'%',)).fetchall()
+    #tracks = app.db_connection.execute("select Name from tracks where Composer LIKE ? order by Name ASC ", ('%'+composer_name+'%',)).fetchall()
+    tracks = app.db_connection.execute("select Name from tracks where Composer = ? order by Name ASC ", (composer_name,)).fetchall()
     tracks = [x[0] for x in tracks]
     if tracks:
         return tracks
