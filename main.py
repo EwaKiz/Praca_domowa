@@ -44,7 +44,12 @@ def check_token(token: str):
 
 class Patient(BaseModel):
     name: str
-    surname: str 
+    surname: str
+    
+class Album(BaseModel):
+    title: str
+    artist_id: int
+    
 @app.get("/")
 def root():
     return {"message":  "Hello World during the coronavirus pandemic!"}
@@ -156,10 +161,36 @@ async def composers(composer_name:str):
         resp= {'error': composer_name}
         return JSONResponse(status_code=404, content={'detail': resp})
 
+@app.post("/albums")
+async def albums_add(album: Album):
+    artists = app.db_connection.execute(
+        "SELECT ArtistId FROM artists WHERE ArtistId = ?", (album.artist_id,)
+    ).fetchall()
+    if artists:
+        cursor = app.db_connection.execute(
+            "INSERT INTO albums (Title, ArtistId) VALUES (?,?)", (album.title,album.artist_id)
+        )
+        app.db_connection.commit()
+        new_album_id = cursor.lastrowid
+        app.db_connection.row_factory = sqlite3.Row
+        album = app.db_connection.execute(
+            "SELECT *FROM albums WHERE AlbumId = ?",
+            (new_album_id, )).fetchone()
+        json_compatible_item_data = jsonable_encoder(album)
+        return JSONResponse(status_code=201, content=json_compatible_item_data)
+    else:
+        return JSONResponse(status_code=404, content={'detail': {'error': "Artist not in database"}})
 
 
-
-
+@app.get("/albums/{album_id}")
+async def albums_get(album_id:int):
+    app.db_connection.row_factory = sqlite3.Row
+    album = app.db_connection.execute(
+            "SELECT *FROM albums WHERE AlbumId = ?",
+            (album_id, )).fetchone()
+    json_compatible_item_data = jsonable_encoder(album)
+    return JSONResponse(status_code=201, content=json_compatible_item_data)
+    
 
 
 
