@@ -132,7 +132,6 @@ async def all_tracks(page:int=0, per_page:int=10):
     tracks = app.db_connection.execute("select * from tracks order by TrackId ASC ").fetchall()
     tracks = tracks[page*per_page:(page+1)*per_page]
     return {
-        "tracks": tracks,
-        "tracks_counter": len(tracks)
+        "tracks": tracks
     }
 
