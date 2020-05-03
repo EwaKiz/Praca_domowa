@@ -7,6 +7,7 @@ Created on Thu Apr  2 23:44:28 2020
 """
 
 # main.py
+import sqlite3 
 from hashlib import sha256
 from fastapi import FastAPI, Request, Cookie, Depends, HTTPException, status, Response 
 from pydantic import BaseModel
@@ -112,3 +113,26 @@ async def delete_patient(pk:int, session_token: str = Cookie(None)):
         return JSONResponse(status_code=200, content={"message": "Patient {id} deleted!".format(id=pk)})
     else:
         return JSONResponse(status_code=404, content={"message": "Patient not found"})
+    
+    
+@app.on_event("startup")
+async def startup():
+    app.db_connection = sqlite3.connect('chinook.db')
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    app.db_connection.close()
+
+
+
+
+@app.get("/tracks")
+async def all_tracks(page:int=0, per_page:int=10):
+    tracks = app.db_connection.execute("select * from tracks order by TrackId ASC ").fetchall()
+    tracks = tracks[page*per_page:(page+1)*per_page]
+    return {
+        "tracks": tracks,
+        "tracks_counter": len(tracks)
+    }
+
